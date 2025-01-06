@@ -18,7 +18,6 @@ import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
-import Image from 'next/image'
 import {
   Select,
   SelectContent,
@@ -28,6 +27,7 @@ import {
 } from "../../../components/ui/select"
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { TableLayout } from '../common/TableLayout'
 
 interface Laporan {
   id: number
@@ -242,10 +242,10 @@ export default function LaporanPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 md:p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-          <h1 className="text-xl md:text-2xl font-bold">Daftar Laporan</h1>
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <TableLayout
+        title="Daftar Laporan"
+        filterSection={
+          <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
             <Select
               value={selectedMonth}
               onValueChange={setSelectedMonth}
@@ -263,121 +263,97 @@ export default function LaporanPage() {
             </Select>
             <Button
               variant="outline"
-              className="flex items-center justify-center gap-2 w-full md:w-auto"
+              className="w-full md:w-auto"
               onClick={generatePDF}
               disabled={laporan.length === 0}
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4 mr-2" />
               Download PDF
             </Button>
           </div>
-        </div>
-
-        <Card className="overflow-hidden">
-          {laporan.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
-              Tidak ada laporan
-            </div>
-          ) : (
-            <div className="w-full overflow-x-auto min-w-full">
-              <div className="min-w-[800px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[100px] px-2 py-3">Tanggal</TableHead>
-                      <TableHead className="w-[150px] px-2 py-3">Nama Pelapor</TableHead>
-                      <TableHead className="w-[100px] px-2 py-3">Token</TableHead>
-                      <TableHead className="w-[150px] px-2 py-3">Lokasi</TableHead>
-                      <TableHead className="w-[150px] px-2 py-3">Lokasi Spesifik</TableHead>
-                      <TableHead className="px-2 py-3">Deskripsi</TableHead>
-                      <TableHead className="w-[100px] px-2 py-3">Gambar</TableHead>
-                      <TableHead className="w-[100px] px-2 py-3">Status</TableHead>
-                      <TableHead className="w-[100px] px-2 py-3">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {laporan.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="whitespace-nowrap">
-                          <div className="flex flex-col">
-                            <span className="font-medium">
-                              {formatDate(item.createdAt)}
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {format(new Date(item.createdAt), "HH:mm 'WIB'")}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{item.reporter_name}</TableCell>
-                        <TableCell>
-                          <div className="font-mono bg-gray-100 px-2 py-1 rounded text-sm">
-                            {item.token}
-                          </div>
-                        </TableCell>
-                        <TableCell>{item.location}</TableCell>
-                        <TableCell>{item.specific_location}</TableCell>
-                        <TableCell className="max-w-xs truncate">{item.description}</TableCell>
-                        <TableCell>
-                          {item.image && (
-                            <div className="relative w-20 h-20">
-                              <Image
-                                src={`/uploads/${item.image}`}
-                                alt="Foto Kerusakan"
-                                fill
-                                className="object-cover rounded-md cursor-pointer hover:opacity-75"
-                                onClick={() => window.open(`/uploads/${item.image}`, '_blank')}
-                              />
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              item.status === 'resolved' ? 'success' :
-                              item.status === 'in_progress' ? 'warning' :
-                              'default'
-                            }
-                          >
-                            {item.status === 'resolved' ? 'Selesai' :
-                             item.status === 'in_progress' ? 'Diproses' :
-                             'Menunggu'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {(item.status === 'pending' || item.status === 'in_progress') && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
-                                onClick={() => handleInProgress(item.id)}
-                              >
-                                <Clock className="h-4 w-4 mr-1" />
-                                Proses
-                              </Button>
-                            )}
-                            {(item.status === 'pending' || item.status === 'in_progress') && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                onClick={() => handleComplete(item.id)}
-                              >
-                                <CheckCircleIcon className="h-4 w-4 mr-1" />
-                                Selesai
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          )}
-        </Card>
-      </div>
+        }
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[120px]">Tanggal</TableHead>
+              <TableHead className="w-[150px]">Nama</TableHead>
+              <TableHead className="w-[100px]">Token</TableHead>
+              <TableHead className="w-[150px]">Lokasi</TableHead>
+              <TableHead>Deskripsi</TableHead>
+              <TableHead className="w-[100px]">Status</TableHead>
+              <TableHead className="w-[120px]">Aksi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {laporan.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="whitespace-nowrap">
+                  <div className="flex flex-col">
+                    <span className="font-medium">
+                      {formatDate(item.createdAt)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(item.createdAt), "HH:mm 'WIB'")}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium">{item.reporter_name}</TableCell>
+                <TableCell>
+                  <code className="px-2 py-1 bg-gray-100 rounded text-sm">
+                    {item.token}
+                  </code>
+                </TableCell>
+                <TableCell>{item.location}</TableCell>
+                <TableCell>
+                  <div className="max-w-[300px] truncate" title={item.description}>
+                    {item.description}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      item.status === 'resolved' ? 'success' :
+                      item.status === 'in_progress' ? 'warning' :
+                      'default'
+                    }
+                  >
+                    {item.status === 'resolved' ? 'Selesai' :
+                     item.status === 'in_progress' ? 'Diproses' :
+                     'Menunggu'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col md:flex-row gap-2">
+                    {(item.status === 'pending' || item.status === 'in_progress') && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                        onClick={() => handleInProgress(item.id)}
+                      >
+                        <Clock className="h-4 w-4 mr-1" />
+                        Proses
+                      </Button>
+                    )}
+                    {(item.status === 'pending' || item.status === 'in_progress') && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => handleComplete(item.id)}
+                      >
+                        <CheckCircleIcon className="h-4 w-4 mr-1" />
+                        Selesai
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableLayout>
     </DashboardLayout>
   )
 } 

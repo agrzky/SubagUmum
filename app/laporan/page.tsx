@@ -134,6 +134,13 @@ export default function LaporanPage() {
         throw new Error(data.error || 'Failed to submit report')
       }
 
+      // Fetch token baru setelah laporan berhasil dibuat
+      const tokenResponse = await fetch('/api/get-last-token')
+      const tokenData = await tokenResponse.json()
+      if (tokenResponse.ok) {
+        setToken(tokenData.token)
+      }
+
       toast.success("Laporan Berhasil Dikirim!", {
         description: "Terima kasih telah mengirimkan laporan, harap ingat kode token Anda untuk melihat status laporan Anda.",
         duration: 10000,
