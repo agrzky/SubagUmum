@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { Card } from "@/components/ui/card"
+import { TableLayout } from '../common/TableLayout'
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, Download, XCircle } from 'lucide-react'
+import { CheckCircle, XCircle, Download } from 'lucide-react'
 import { toast } from "sonner"
 import { format } from 'date-fns'
 import { id } from 'date-fns/locale'
@@ -204,15 +204,15 @@ export default function PermintaanBarangPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Daftar Permintaan Barang</h1>
-          <div className="flex items-center gap-4">
+      <TableLayout
+        title="Daftar Permintaan Barang"
+        filterSection={
+          <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
             <Select
               value={selectedMonth}
               onValueChange={setSelectedMonth}
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Pilih Bulan" />
               </SelectTrigger>
               <SelectContent>
@@ -225,7 +225,7 @@ export default function PermintaanBarangPage() {
             </Select>
             <Button
               variant="outline"
-              className="flex items-center gap-2"
+              className="w-full md:w-auto flex items-center gap-2"
               onClick={generatePDF}
               disabled={requests.length === 0}
             >
@@ -233,64 +233,68 @@ export default function PermintaanBarangPage() {
               Download PDF
             </Button>
           </div>
-        </div>
-
-        <Card>
+        }
+      >
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Tanggal</TableHead>
-                <TableHead>Nama</TableHead>
-                <TableHead>Departemen</TableHead>
-                <TableHead>Jenis Barang</TableHead>
-                <TableHead>Deskripsi</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Aksi</TableHead>
+                <TableHead className="w-[100px]">Tanggal</TableHead>
+                <TableHead className="min-w-[150px]">Nama</TableHead>
+                <TableHead className="min-w-[120px]">Departemen</TableHead>
+                <TableHead className="min-w-[120px]">Jenis Barang</TableHead>
+                <TableHead className="min-w-[200px]">Keterangan</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="w-[150px] text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {requests.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{format(new Date(item.tanggal), 'dd/MM/yyyy')}</TableCell>
-                  <TableCell>{item.nama}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {format(new Date(item.tanggal), "dd MMM yyyy", { locale: id })}
+                  </TableCell>
+                  <TableCell className="font-medium">{item.nama}</TableCell>
                   <TableCell>{item.department}</TableCell>
-                  <TableCell>{item.itemType}</TableCell>
-                  <TableCell>{item.description}</TableCell>
+                  <TableCell className="capitalize">{item.itemType}</TableCell>
+                  <TableCell>
+                    <div className="max-w-[300px] truncate" title={item.description}>
+                      {item.description}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        item.status === 'fulfilled' ? 'success' :
                         item.status === 'approved' ? 'success' :
                         item.status === 'rejected' ? 'destructive' :
                         'default'
                       }
                     >
-                      {item.status === 'fulfilled' ? 'Selesai' :
-                       item.status === 'approved' ? 'Disetujui' :
+                      {item.status === 'approved' ? 'Disetujui' :
                        item.status === 'rejected' ? 'Ditolak' :
                        'Menunggu'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     {item.status === 'pending' && (
-                      <div className="flex gap-2">
+                      <div className="flex flex-col md:flex-row gap-2 justify-end">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-green-600"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
                           onClick={() => handleApprove(item.id)}
                         >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Setujui
+                          <CheckCircle className="h-4 w-4 md:mr-1" />
+                          <span className="hidden md:inline">Setujui</span>
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-red-600"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={() => handleReject(item.id)}
                         >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Tolak
+                          <XCircle className="h-4 w-4 md:mr-1" />
+                          <span className="hidden md:inline">Tolak</span>
                         </Button>
                       </div>
                     )}
@@ -299,8 +303,8 @@ export default function PermintaanBarangPage() {
               ))}
             </TableBody>
           </Table>
-        </Card>
-      </div>
+        </div>
+      </TableLayout>
     </DashboardLayout>
   )
 } 

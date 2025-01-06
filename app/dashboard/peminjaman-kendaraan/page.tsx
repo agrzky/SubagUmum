@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { Card } from "@/components/ui/card"
+import { TableLayout } from '../common/TableLayout'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import {
   Table,
   TableBody,
@@ -23,8 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 
 interface VehicleRental {
   id: number
@@ -199,15 +199,15 @@ export default function PeminjamanKendaraanPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Daftar Peminjaman Kendaraan</h1>
-          <div className="flex items-center gap-4">
+      <TableLayout
+        title="Daftar Peminjaman Kendaraan"
+        filterSection={
+          <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
             <Select
               value={selectedMonth}
               onValueChange={setSelectedMonth}
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Pilih Bulan" />
               </SelectTrigger>
               <SelectContent>
@@ -220,7 +220,7 @@ export default function PeminjamanKendaraanPage() {
             </Select>
             <Button
               variant="outline"
-              className="flex items-center gap-2"
+              className="w-full md:w-auto flex items-center gap-2"
               onClick={generatePDF}
               disabled={peminjaman.length === 0}
             >
@@ -228,70 +228,78 @@ export default function PeminjamanKendaraanPage() {
               Download PDF
             </Button>
           </div>
-        </div>
-
-        <Card>
+        }
+      >
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Tanggal Mulai</TableHead>
-                <TableHead>Tanggal Selesai</TableHead>
-                <TableHead>Nama</TableHead>
-                <TableHead>No. HP</TableHead>
-                <TableHead>Jenis Kendaraan</TableHead>
-                <TableHead>Supir</TableHead>
-                <TableHead>Tujuan</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Aksi</TableHead>
+                <TableHead className="w-[100px]">Tanggal</TableHead>
+                <TableHead className="min-w-[150px]">Nama</TableHead>
+                <TableHead className="min-w-[120px]">No. HP</TableHead>
+                <TableHead className="min-w-[120px]">Kendaraan</TableHead>
+                <TableHead className="min-w-[100px]">Sopir</TableHead>
+                <TableHead className="min-w-[200px]">Tujuan</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="w-[150px] text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {peminjaman.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{`${format(new Date(item.startDate), 'dd/MM/yyyy')} ${item.startTime}`}</TableCell>
-                  <TableCell>{`${format(new Date(item.endDate), 'dd/MM/yyyy')} ${item.endTime}`}</TableCell>
-                  <TableCell>{item.nama}</TableCell>
-                  <TableCell>{item.handphone || '-'}</TableCell>
-                  <TableCell>{item.vehicleType}</TableCell>
-                  <TableCell>{item.driver || '-'}</TableCell>
-                  <TableCell>{item.purpose}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col space-y-1">
+                      <span className="font-medium whitespace-nowrap">
+                        {format(new Date(item.startDate), "dd MMM yyyy", { locale: id })}
+                      </span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">
+                        {format(new Date(item.startDate), "HH:mm", { locale: id })} - 
+                        {format(new Date(item.endDate), "HH:mm", { locale: id })}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="font-medium">{item.nama}</TableCell>
+                  <TableCell className="whitespace-nowrap">{item.handphone}</TableCell>
+                  <TableCell className="capitalize">{item.vehicleType}</TableCell>
+                  <TableCell>{item.driver ? 'Ya' : 'Tidak'}</TableCell>
+                  <TableCell>
+                    <div className="max-w-[300px] truncate" title={item.purpose}>
+                      {item.purpose}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={
                         item.status === 'approved' ? 'success' :
                         item.status === 'rejected' ? 'destructive' :
-                        item.status === 'in_use' ? 'warning' :
-                        item.status === 'completed' ? 'success' :
                         'default'
                       }
                     >
                       {item.status === 'approved' ? 'Disetujui' :
                        item.status === 'rejected' ? 'Ditolak' :
-                       item.status === 'in_use' ? 'Digunakan' :
-                       item.status === 'completed' ? 'Selesai' :
                        'Menunggu'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     {item.status === 'pending' && (
-                      <div className="flex gap-2">
+                      <div className="flex flex-col md:flex-row gap-2 justify-end">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-green-600"
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
                           onClick={() => handleApprove(item.id)}
                         >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Setujui
+                          <CheckCircle className="h-4 w-4 md:mr-1" />
+                          <span className="hidden md:inline">Setujui</span>
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-red-600"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={() => handleReject(item.id)}
                         >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Tolak
+                          <XCircle className="h-4 w-4 md:mr-1" />
+                          <span className="hidden md:inline">Tolak</span>
                         </Button>
                       </div>
                     )}
@@ -300,8 +308,8 @@ export default function PeminjamanKendaraanPage() {
               ))}
             </TableBody>
           </Table>
-        </Card>
-      </div>
+        </div>
+      </TableLayout>
     </DashboardLayout>
   )
 } 
